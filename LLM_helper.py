@@ -11,11 +11,18 @@ import requests
 
 from github_issue import get_issue_details, transform_github_issue
 from util import timeit_wrapper
+import os
 
+# Load environment variables from .env file
+
+# Retrieve GitHub access token from environment variables
+LLM_URL = os.environ.get('LLM_URL')
 class LLMHelper:
     def __init__(self):
-        
-        self.base_url = "http://0.0.0.0:3000/v1"
+        self.llm_url = os.environ.get('LLM_URL_WITHOUT_TRAILING_SLASH')
+        if(self.llm_url is None):
+            raise Exception("LLM_URL_WITHOUT_TRAILING_SLASH is not set")
+        self.base_url = f"{self.llm_url}/v1"
         
 #         # destroy_model_parallel()
 #         self.llm = VLLM(model="mistralai/Mistral-7B-Instruct-v0.2",
