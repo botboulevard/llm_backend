@@ -1,4 +1,8 @@
-langchain
+langchain==0.1.1
+langchain-community==0.0.13
+langchain-core==0.1.12
+langsmith==0.0.83
 uvicorn[standard]
 fastapi
-PyGithub
+torch==2.1.2
+vllm==0.2.7
