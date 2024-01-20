@@ -1,0 +1,99 @@
+version: 2.1
+
+orbs:
+  aws-cli: circleci/aws-cli@4.1.1
+  aws-s3: circleci/aws-s3@4.0
+  docker: circleci/docker@2.4.0
+
+executors:
+  docker-publisher:
+    environment:
+      IMAGE_NAME: vishals9711/llm_backend
+    docker:
+      - image: circleci/node:latest
+        auth:
+          username: $DOCKER_USER
+          password: $DOCKER_PASSWORD
+
+jobs:
+  publish_to_docker:
+    executor: docker-publisher
+    resource_class: medium
+    steps:
+      - checkout
+      - setup_remote_docker
+      - restore_cache:
+          keys:
+            - docker-image-layers-{{ .Branch }}-{{ checksum "package.json" }}
+      - run:
+          name: Publish Docker Image to Docker Hub
+          command: |
+            echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin
+            docker build -t $IMAGE_NAME:$CIRCLE_SHA1 --progress=plain --build-arg GITHUB_ACCESS_TOKEN=$GITHUB_ACCESS_TOKEN --build-arg LLM_URL_WITHOUT_TRAILING_SLASH=http://localhost:8090 .
+      - save_cache:
+          key: docker-image-layers-{{ .Branch }}-{{ checksum "package.json" }}
+          paths:
+            - /root/.npm
+
+  # s3_copy_job:
+  #   docker:
+  #     - image: cimg/base:current
+  #   environment:
+  #     AWS_DEFAULT_REGION: $AWS_REGION
+  #     AWS_ACCESS_KEY_ID: $CIRCLE_AWS_KEY
+  #     AWS_SECRET_ACCESS_KEY: $CIRCLE_AWS_SECRET
+  #   steps:
+  #     - checkout
+  #     - aws-cli/setup:
+  #         aws_access_key_id: $CIRCLE_AWS_KEY
+  #         aws_secret_access_key: $CIRCLE_AWS_SECRET
+  #         region: $AWS_REGION
+  #     - aws-s3/copy:
+  #         from: docker-compose.yml
+  #         to: s3://botboulevard/docker-compose.yml
+
+  # deploy:
+  #   machine:
+  #     image: ubuntu-2004:202010-01
+  #   resource_class: medium
+  #   steps:
+  #     - checkout
+  #     - run:
+  #         name: Deploy Over SSH
+  #         command: |
+  #           echo "$RESUME_PEM" | base64 -d -i > "resume.pem"
+  #           chmod 400 resume.pem
+  #           sed -i.bak "s/#OPENAI_PLACEHOLDER/$OPEN_API_KEY/g" docker-compose.yml
+  #           echo "Copying docker-compose.yml to EC2 instance"
+  #           rsync -e "ssh -i resume.pem -o StrictHostKeyChecking=no" -av docker-compose.yml ubuntu@$AWS_EC_IP:~/docker-compose.yml
+  #           ssh -i resume.pem -o "StrictHostKeyChecking no" ubuntu@$AWS_EC_IP \
+  #             "export OPENAI_API_KEY=$OPEN_API_KEY && \
+  #             sudo docker-compose down && \
+  #             sudo docker-compose -f ~/docker-compose.yml pull && \
+  #             sudo docker-compose -f ~/docker-compose.yml up -d --force-recreate"
+
+workflows:
+  build-and-deploy:
+    jobs:
+      - publish_to_docker:
+          context: botboulevard
+          filters:
+            branches:
+              only:
+                - master
+      # - s3_copy_job:
+      #     context: botboulevard
+      #     filters:
+      #       branches:
+      #         only:
+      #           - master
+      #     requires:
+      #       - publish_to_docker
+      # - deploy:
+      #     context: botboulevard
+      #     filters:
+      #       branches:
+      #         only:
+      #           - master
+      #     requires:
+      #       - publish_to_docker

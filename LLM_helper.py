@@ -1,5 +1,5 @@
 # from langchain_community.llms import vllm
-from langchain.prompts import PromptTemplate
+# from langchain.prompts import PromptTemplate
 import os
 # os.environ['CUDA_VISIBLE_DEVICES'] = "3"
 # from vllm.model_executor.parallel_utils.parallel_state import destroy_model_parallel
@@ -16,7 +16,6 @@ import os
 # Load environment variables from .env file
 
 # Retrieve GitHub access token from environment variables
-LLM_URL = os.environ.get('LLM_URL')
 class LLMHelper:
     def __init__(self):
         self.llm_url = os.environ.get('LLM_URL_WITHOUT_TRAILING_SLASH')

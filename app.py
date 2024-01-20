@@ -3,18 +3,15 @@ from dotenv import load_dotenv
 load_dotenv()
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from contextlib import asynccontextmanager
 from models import GitHubIssueSummarizerRequest
 from util import extract_github_info
 from LLM_helper import LLMHelper
 import uvicorn
 import time
+import os
 
 # Configure allowed origins for CORS
 origins = [
-    # "http://localhost.tiangolo.com",
-    # "https://localhost.tiangolo.com",
-    # "http://localhost",
     "https://github.com",
 ]
 
@@ -34,6 +31,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+llm_url = os.environ.get('LLM_URL_WITHOUT_TRAILING_SLASH')
 
 @app.post("/summarize/github_issue")
 async def github_issue_summarizer(request: GitHubIssueSummarizerRequest):
@@ -58,6 +57,19 @@ async def github_issue_summarizer(request: GitHubIssueSummarizerRequest):
     except Exception as e:
         logger.error(f"Error in github_issue_summarizer: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
+# @app.middleware("http")
+# async def forward_to_localhost(request, call_next):
+#     """
+#     Middleware to forward requests to localhost:3000 for paths other than /summarize/github_issue.
+#     """
+#     if request.url.path != "/summarize/github_issue":
+#         # Forward the request to localhost:3000
+#         response = await request.httpx_client.get(llm_url + request.url.path)
+#         # Return the response from localhost:3000
+#         return response
+
+#     return await call_next(request)
 
 if __name__ == "__main__":
     uvicorn.run("app:app", host="0.0.0.0", port=9876, workers=1)
