@@ -22,18 +22,19 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
-      - restore_cache:
-          keys:
-            - docker-image-layers-{{ .Branch }}-{{ checksum "package.json" }}
+      # - restore_cache:
+      #     keys:
+      #       - docker-image-layers-{{ .Branch }}-{{ checksum "package.json" }}
       - run:
           name: Publish Docker Image to Docker Hub
           command: |
             echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin
             docker build -t $IMAGE_NAME:$CIRCLE_SHA1 --progress=plain --build-arg GITHUB_ACCESS_TOKEN=$GITHUB_ACCESS_TOKEN --build-arg LLM_URL_WITHOUT_TRAILING_SLASH=http://localhost:8090 .
-      - save_cache:
-          key: docker-image-layers-{{ .Branch }}-{{ checksum "package.json" }}
-          paths:
-            - /root/.npm
+            docker push $IMAGE_NAME:$CIRCLE_SHA1
+      # - save_cache:
+      #     # key: docker-image-layers-{{ .Branch }}-{{ checksum "package.json" }}
+      #     paths:
+      #       - /root/.npm
 
   # s3_copy_job:
   #   docker:
