@@ -43,13 +43,8 @@ class RunPodAPIModel(BaseModel):
 
 class LLMHelper:
     def __init__(self):
-        self.llm_url = Config.
-        self.RUN_POD_ACCESS_TOKEN = os.environ.get('RUN_POD_ACCESS_TOKEN')
-        if(self.llm_url is None):
-            raise Exception("LLM_URL_WITHOUT_TRAILING_SLASH is not set")
-        
-        if(self.RUN_POD_ACCESS_TOKEN is None):
-            raise Exception("RUN_POD_ACCESS_TOKEN is not set")
+        self.llm_url = Config.LLM_URL
+        self.RUN_POD_ACCESS_TOKEN = Config.RUN_POD_ACCESS_TOKEN
         
         # self.base_url = f"{self.llm_url}/v1"
         

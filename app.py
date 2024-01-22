@@ -1,23 +1,17 @@
-import logging
-from dotenv import load_dotenv
-load_dotenv()
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from models import GitHubIssueSummarizerRequest
 from util import extract_github_info
-from LLM_helper import LLMHelper
+from llm_helper import LLMHelper
 import uvicorn
 import time
 import os
+from custom_logger import fastapi_logger
 
 # Configure allowed origins for CORS
 origins = [
     "https://github.com",
 ]
-
-# Configure logging to a file
-logging.basicConfig(filename="app.log", level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 # Create FastAPI app
 app = FastAPI()
@@ -31,8 +25,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-llm_url = os.environ.get('LLM_URL_WITHOUT_TRAILING_SLASH')
 
 @app.post("/summarize/github_issue")
 async def github_issue_summarizer(request: GitHubIssueSummarizerRequest):
@@ -51,11 +43,11 @@ async def github_issue_summarizer(request: GitHubIssueSummarizerRequest):
         results = llm.llm_response(repo_owner=org, issue_number=issue_number, repo_name=repo)
         end_time = time.time()
         elapsed_time = end_time - start_time
-        logger.info(f"Processed request in {elapsed_time} seconds")
+        fastapi_logger.info(f"Processed request in {elapsed_time} seconds")
         return results
 
     except Exception as e:
-        logger.error(f"Error in github_issue_summarizer: {str(e)}")
+        fastapi_logger.error(f"Error in github_issue_summarizer: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 # @app.middleware("http")

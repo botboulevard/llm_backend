@@ -2,12 +2,11 @@ from fastapi import HTTPException
 import requests
 from models import CondensedComment, CondensedIssue
 from util import timeit_wrapper
-import os
-
+from config import Config
 # Load environment variables from .env file
 
 # Retrieve GitHub access token from environment variables
-ACCESS_TOKEN = os.environ.get('GITHUB_ACCESS_TOKEN')
+ACCESS_TOKEN = Config.ACCESS_TOKEN
 
 @timeit_wrapper
 def transform_github_issue(issue):
