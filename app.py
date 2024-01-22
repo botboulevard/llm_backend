@@ -10,7 +10,7 @@ from custom_logger import fastapi_logger
 
 # Configure allowed origins for CORS
 origins = [
-    "https://github.com",
+    "*",
 ]
 
 # Create FastAPI app
