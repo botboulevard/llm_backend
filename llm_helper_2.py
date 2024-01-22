@@ -1,26 +1,21 @@
 # from langchain_community.llms import vllm
 # from langchain.prompts import PromptTemplate
-import os
 # os.environ['CUDA_VISIBLE_DEVICES'] = "3"
 # from vllm.model_executor.parallel_utils.parallel_state import destroy_model_parallel
 
-import json
+
 # from langchain_community.llms import VLLM
 
 import requests
-
+import json
 from github_issue import get_issue_details, transform_github_issue
 from util import timeit_wrapper
-import os
-# RUN_POD_ACCESS_TOKEN=os.environ.get('RUN_POD_ACCESS_TOKEN')
-# Load environment variables from .env file
-
-# Retrieve GitHub access token from environment variables
-
-
+# import os
+from custom_logger import llm_logger
 from typing import List
 
 from pydantic import BaseModel
+from config import Config
 
 class TextSummary(BaseModel):
     input_tokens: int
@@ -48,7 +43,7 @@ class RunPodAPIModel(BaseModel):
 
 class LLMHelper:
     def __init__(self):
-        self.llm_url = os.environ.get('LLM_URL_WITHOUT_TRAILING_SLASH')
+        self.llm_url = Config.
         self.RUN_POD_ACCESS_TOKEN = os.environ.get('RUN_POD_ACCESS_TOKEN')
         if(self.llm_url is None):
             raise Exception("LLM_URL_WITHOUT_TRAILING_SLASH is not set")
@@ -90,7 +85,7 @@ class LLMHelper:
     @timeit_wrapper
     def llm_response(self, issue_number: int, repo_name: str, repo_owner: str) -> RunPodAPIModel or None:
         try:
-            print("Request Received")
+            llm_logger.info(f"Requesting LLM response for issue {issue_number} in repo {repo_name} owned by {repo_owner}")
             transformed_issue = transform_github_issue(get_issue_details(
                 issue_number=issue_number,
                 repo_name=repo_name,
@@ -109,6 +104,7 @@ class LLMHelper:
                     }
                 }
             
+            llm_logger.info(f"Data sent to LLM: {str(data)}")
             
             # post_data = {
             #     "model": "mistralai/Mistral-7B-Instruct-v0.2",
@@ -132,12 +128,14 @@ class LLMHelper:
             # response = requests.post(url, headers=headers, data=json.dumps(post_data))
             response = requests.post(self.llm_url, headers=headers, data=json.dumps(data))
             response.raise_for_status()  # Raises HTTPError for bad responses
+            llm_logger.info(f"LLM response: {response.json()}")
             return_data = response.json()
             return return_data
 
         except requests.exceptions.RequestException as e:
             # Handle exceptions here
             print(f"Error during request: {e}")
+            llm_logger.error(f"Error during request: {e}")
             return None  # Or raise an exception, log, or handle it as appropriate
         
         
