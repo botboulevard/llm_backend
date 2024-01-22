@@ -16,13 +16,21 @@ EXPOSE 9876
 # Define environment variable for production
 ARG GITHUB_ACCESS_TOKEN
 ARG LLM_URL_WITHOUT_TRAILING_SLASH
+ARG RUN_POD_ACCESS_TOKEN
+
 
 ENV GITHUB_ACCESS_TOKEN=$GITHUB_ACCESS_TOKEN
 ENV LLM_URL_WITHOUT_TRAILING_SLASH=$LLM_URL_WITHOUT_TRAILING_SLASH
+ENV RUN_POD_ACCESS_TOKEN=RUN_POD_ACCESS_TOKEN
 
 # Run app.py when the container launches
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "9876"]
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "9876", "--workers", "4"]
 
 
 
 # sudo docker buildx build --platform=linux/amd64 -t vishals9711/llm_backend:latest --progress=plain --build-arg GITHUB_ACCESS_TOKEN=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 --build-arg LLM_URL_WITHOUT_TRAILING_SLASH=http://localhost:8090 .
+# docker run -p 9876:9876 \
+#            -e GITHUB_ACCESS_TOKEN=your_github_token \
+#            -e LLM_URL_WITHOUT_TRAILING_SLASH=your_llm_url \
+#            -e RUN_POD_ACCESS_TOKEN=your_run_pod_token \
+#            your_image_name
